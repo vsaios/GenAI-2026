@@ -4,7 +4,7 @@ import mapboxgl, { Map } from "mapbox-gl"
 import { torontoReports } from "@/mock/torontoReports"
 import type { Report } from "@/types/report"
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ""
 
 type SelectedReport = Report | null
 
@@ -40,8 +40,9 @@ export function TorontoMap() {
 
   useEffect(() => {
     if (!MAPBOX_TOKEN) {
+      console.warn("Mapbox token missing. Running in demo mode.")
       setError(
-        "Mapbox token missing. Set VITE_MAPBOX_TOKEN in a .env file based on .env.example.",
+        "Map disabled in demo mode — no Mapbox token provided.",
       )
       return
     }
@@ -179,11 +180,17 @@ export function TorontoMap() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div
-        ref={containerRef}
-        className="h-[420px] w-full overflow-hidden rounded-lg border border-slate-800"
-      />
-      {error && (
+      {MAPBOX_TOKEN ? (
+        <div
+          ref={containerRef}
+          className="h-[420px] w-full overflow-hidden rounded-lg border border-slate-800"
+        />
+      ) : (
+        <div className="flex h-[420px] w-full items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-900 text-xs text-slate-400">
+          Map disabled in demo mode — no Mapbox token provided.
+        </div>
+      )}
+      {error && MAPBOX_TOKEN && (
         <p className="text-xs text-red-400">
           {error}
         </p>
