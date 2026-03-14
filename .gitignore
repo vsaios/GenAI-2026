@@ -1,0 +1,38 @@
+# Ignore all .env files
+*.env
+
+# Ignore .env files in all subdirectories
+**/.env
+
+# Ignore Python cache and build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+.venv/
+venv/
+
+# Ignore model and binary files
+*.tflite
+*.h5
+*.pt
+*.bin
+*.exe
+*.dll
+*.so
+
+# Ignore log and temp files
+*.log
+*.tmp
+
+# Ignore hardware models
+pothole-ai-system/hardware/models/
+ 
+# Ignore frontend dependencies
+pothole-ai-system/frontend/node_modules/
+# Ignore build outputs
+pothole-ai-system/frontend/dist/
+pothole-ai-system/backend/app/__pycache__/
+pothole-ai-system/ai/Moorcheh/__pycache__/

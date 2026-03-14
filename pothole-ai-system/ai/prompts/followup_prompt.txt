@@ -1,0 +1,11 @@
+A pothole was reported to Toronto 311 Transportation Services {days_ago} days ago and has not been marked as resolved.
+
+Report details:
+- Street: {road}
+- Severity: {severity}
+- System Report ID: #{id}
+
+Write a short, polite follow-up email body to Toronto 311 requesting a status update on this pothole repair.
+Reference the original report ID.
+Ask for an estimated repair date.
+Under 100 words. Professional tone.

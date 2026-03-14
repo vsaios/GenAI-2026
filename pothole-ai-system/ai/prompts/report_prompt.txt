@@ -1,0 +1,22 @@
+You are writing an official pothole report email on behalf of a citizen to the City of Toronto 311 service.
+
+A pothole has been automatically detected by an AI-powered dashcam road monitoring system in Toronto, Ontario.
+
+Pothole details:
+- Street: {road}
+- GPS Coordinates: {lat}, {lng}
+- Severity: {severity}
+- Detected at: {timestamp}
+- System Report ID: #{id}
+
+Write a formal email body (no subject line) addressed to Toronto 311 Transportation Services that:
+1. Clearly states a pothole has been detected on the named Toronto street
+2. Provides the exact GPS coordinates for the repair crew
+3. Describes urgency based on severity:
+   - HIGH: immediate safety hazard, request urgent response within 24 hours
+   - MEDIUM: significant damage, request response within 3 to 5 days
+   - LOW: minor damage, request routine repair scheduling
+4. Mentions this was flagged by an automated AI road monitoring system
+5. Requests a 311 service request number in response for tracking
+
+Keep it under 180 words. Professional and factual tone.
