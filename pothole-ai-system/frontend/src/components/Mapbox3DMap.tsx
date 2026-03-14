@@ -20,21 +20,41 @@ const token = MAPBOX_TOKEN
 
 const defaultCenter: [number, number] = [-79.3832, 43.6532]
 
-function buildGeoJson(reports: Report[]) {
-  return {
-    type: "FeatureCollection",
-    features: reports.map((report) => ({
-      type: "Feature",
+/** Custom incident node for Toronto map only: Myhal Centre */
+const MYHAL_CENTRE_ID = "myhal-centre"
+const MYHAL_CENTRE_COORDINATES: [number, number] = [-79.396485, 43.660837]
+
+function buildGeoJson(reports: Report[], includeMyhalCentre = false) {
+  const features = reports.map((report) => ({
+    type: "Feature" as const,
+    geometry: {
+      type: "Point" as const,
+      coordinates: [report.longitude, report.latitude] as [number, number],
+    },
+    properties: {
+      id: report.id,
+      severity: report.severity,
+    },
+  }))
+
+  if (includeMyhalCentre) {
+    features.push({
+      type: "Feature" as const,
       geometry: {
-        type: "Point",
-        coordinates: [report.longitude, report.latitude],
+        type: "Point" as const,
+        coordinates: MYHAL_CENTRE_COORDINATES,
       },
       properties: {
-        id: report.id,
-        severity: report.severity,
+        id: MYHAL_CENTRE_ID,
+        severity: "medium" as const,
       },
-    })),
-  } as const
+    })
+  }
+
+  return {
+    type: "FeatureCollection" as const,
+    features,
+  }
 }
 
 function generateReportCardHtml(opts: {
@@ -96,7 +116,10 @@ export function Mapbox3DMap({
   const popupRef = useRef<mapboxgl.Popup | null>(null)
   const clusterAnimationFrameRef = useRef<number | null>(null)
 
-  const geoJson = useMemo(() => buildGeoJson(torontoReports), [])
+  const geoJson = useMemo(
+    () => buildGeoJson(torontoReports, streetLevelMode),
+    [streetLevelMode],
+  )
 
   useEffect(() => {
     if (!token) {
@@ -338,16 +361,27 @@ export function Mapbox3DMap({
 
         const geom = feature.geometry as { type: string; coordinates: number[] }
         const coordinates: [number, number] = [geom.coordinates[0], geom.coordinates[1]]
+        const id = feature.properties?.id as string | undefined
 
-        // Synthetic data for popup (per requirements)
-        const html = generateReportCardHtml({
-          timeReported: "March 18, 2026 – 2:14 PM",
-          location: "Queen St W & Spadina Ave",
-          description: "Large pothole reported in right traffic lane",
-          severityLabel: "Moderate",
-          badgeBg: "#854d0e",
-          badgeColor: "#fde047",
-        })
+        const isMyhal = id === MYHAL_CENTRE_ID
+        const html = isMyhal
+          ? generateReportCardHtml({
+              timeReported: "1 hour ago",
+              location: "Myhal Centre",
+              description:
+                "Large pothole detected near the entrance road by Myhal Centre.",
+              severityLabel: "Medium",
+              badgeBg: "#854d0e",
+              badgeColor: "#fde047",
+            })
+          : generateReportCardHtml({
+              timeReported: "March 18, 2026 – 2:14 PM",
+              location: "Queen St W & Spadina Ave",
+              description: "Large pothole reported in right traffic lane",
+              severityLabel: "Moderate",
+              badgeBg: "#854d0e",
+              badgeColor: "#fde047",
+            })
 
         if (popupRef.current) {
           popupRef.current.remove()
