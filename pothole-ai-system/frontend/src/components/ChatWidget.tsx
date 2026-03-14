@@ -7,27 +7,24 @@ interface Message {
 }
 
 export function ChatWidget() {
-  const [open, setOpen]       = useState(false)
-  const [input, setInput]     = useState("")
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen]         = useState(false)
+  const [input, setInput]       = useState("")
+  const [loading, setLoading]   = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     { role: "bot", text: "Hi! I'm your StreetSafe assistant. Ask me about potholes on any Toronto street." }
   ])
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Auto scroll to latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, loading])
 
   async function handleSend() {
     if (!input.trim() || loading) return
-
     const userMsg: Message = { role: "user", text: input }
     setMessages(prev => [...prev, userMsg])
     setInput("")
     setLoading(true)
-
     try {
       const data = await sendChatMessage(input)
       setMessages(prev => [...prev, { role: "bot", text: data.answer }])
@@ -50,7 +47,6 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating button */}
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
@@ -62,10 +58,10 @@ export function ChatWidget() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed bottom-20 right-5 z-30 w-80 rounded-3xl border border-white/20 bg-slate-900/90 shadow-2xl backdrop-blur-xl flex flex-col"
+        <div
+          className="fixed bottom-20 right-5 z-30 w-80 rounded-3xl border border-white/20 bg-slate-900/90 shadow-2xl backdrop-blur-xl flex flex-col"
           style={{ height: "420px" }}
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <div>
               <p className="text-sm font-semibold text-white">StreetSafe Assistant</p>
@@ -75,12 +71,9 @@ export function ChatWidget() {
               type="button"
               onClick={() => setOpen(false)}
               className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-slate-200 hover:bg-white/20"
-            >
-              ×
-            </button>
+            >×</button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
             {messages.map((msg, i) => (
               <div
@@ -102,7 +95,6 @@ export function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
           <div className="border-t border-white/10 px-3 py-2 flex gap-2">
             <input
               value={input}
