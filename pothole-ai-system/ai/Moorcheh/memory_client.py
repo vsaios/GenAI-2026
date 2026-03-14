@@ -111,8 +111,18 @@ def _moorcheh_read(query: str = None) -> list:
         top_k=50
     )
     docs = result.get("results", [])
-    # Extract metadata — fall back to full doc if metadata is missing
-    return [doc.get("metadata") or doc for doc in docs]
+    # TEMPORARY — print first result to see exact structure
+    if docs:
+        print(f"[Debug] Raw result sample: {docs[0]}")
+    # Extract nested metadata — fall back to full doc if not present
+    def extract_metadata(doc):
+        if "metadata" in doc and isinstance(doc["metadata"], dict) and "metadata" in doc["metadata"]:
+            return doc["metadata"]["metadata"]
+        elif "metadata" in doc:
+            return doc["metadata"]
+        else:
+            return doc
+    return [extract_metadata(doc) for doc in docs]
 
 def _moorcheh_update(pothole_id: int, fields: dict) -> dict:
     """Update a pothole record by re-uploading with merged fields."""

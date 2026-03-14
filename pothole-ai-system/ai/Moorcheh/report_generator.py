@@ -25,7 +25,7 @@ def generate_report(pothole: dict) -> str:
     )
 
     message = client.chat.completions.create(
-        model="tgi",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": formatted_prompt}]
     )
     return message.choices[0].message.content
@@ -55,7 +55,7 @@ def generate_chat_response(user_message: str, potholes: list) -> str:
     ]) or "No potholes currently detected in the system."
 
     message = client.chat.completions.create(
-        model="tgi",
+        model="openai/gpt-oss-120b",
         messages=[
             {"role": "system",  "content": system_prompt},
             {"role": "user",    "content": f"Current Toronto pothole data:\n{pothole_context}\n\nUser question: {user_message}"}
@@ -78,7 +78,7 @@ def generate_followup_email(pothole: dict, days_ago: int) -> str:
     )
 
     message = client.chat.completions.create(
-        model="tgi",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": formatted_prompt}]
     )
     return message.choices[0].message.content
