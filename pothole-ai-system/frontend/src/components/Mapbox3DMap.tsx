@@ -54,7 +54,7 @@ function generateReportCardHtml(opts: {
     badgeColor,
   } = opts
   return `
-    <div style="
+    <div class="popup-card" style="
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       width: 260px;
       max-width: 100%;
@@ -64,35 +64,11 @@ function generateReportCardHtml(opts: {
       box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
       padding: 1rem;
     ">
-      <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: #0f172a;">
-        Pothole Report
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Time Reported</div>
-          <div style="font-size: 0.875rem; font-weight: 500; color: #0f172a;">${escapeHtml(timeReported)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Location</div>
-          <div style="font-size: 0.875rem; font-weight: 500; color: #0f172a;">${escapeHtml(location)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Description</div>
-          <div style="font-size: 0.875rem; font-weight: 500; color: #0f172a;">${escapeHtml(description)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Severity</div>
-          <span style="
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 500;
-            padding: 0.2rem 0.5rem;
-            border-radius: 9999px;
-            background: ${badgeBg};
-            color: ${badgeColor};
-          ">${escapeHtml(severityLabel)}</span>
-        </div>
-      </div>
+      <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0 0 0.5rem 0; color: #0f172a;">Pothole Report</h3>
+      <p style="margin: 0.25rem 0; font-size: 0.875rem;"><strong>Location:</strong> ${escapeHtml(location)}</p>
+      <p style="margin: 0.25rem 0; font-size: 0.875rem;"><strong>Reported:</strong> ${escapeHtml(timeReported)}</p>
+      <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #334155;">${escapeHtml(description)}</p>
+      <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem;"><strong>Severity:</strong> <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; background: ${badgeBg}; color: ${badgeColor}; font-weight: 500;">${escapeHtml(severityLabel)}</span></p>
     </div>
   `
 }
@@ -383,7 +359,7 @@ export function Mapbox3DMap({
           closeOnClick: true,
           maxWidth: "300px",
           anchor: "bottom",
-          offset: [0, -8],
+          offset: 25,
         })
           .setLngLat(coordinates)
           .setHTML(html)
@@ -433,7 +409,7 @@ export function Mapbox3DMap({
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="relative h-full w-full">
-        <div ref={containerRef} className="h-full w-full" />
+        <div ref={containerRef} className="relative h-full w-full" />
 
         {fallbackReportId && (
           <div className="pointer-events-none absolute inset-y-4 right-4 z-10 flex items-start justify-end">
