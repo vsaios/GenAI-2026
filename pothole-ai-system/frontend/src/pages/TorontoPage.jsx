@@ -11,7 +11,13 @@ export function TorontoPage() {
         </p>
       </section>
       <section className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
-        <Mapbox3DMap heightClass="h-[480px]" />
+        <Mapbox3DMap
+          heightClass="h-[480px]"
+          center={[-79.3832, 43.6532]}
+          zoom={14.5}
+          minZoom={13.5}
+          streetLevelMode
+        />
       </section>
     </main>
   )
