@@ -1,14 +1,15 @@
 import sys
 import os
 
-# Cross-platform path to AI Moorcheh module
 _here = os.path.dirname(os.path.abspath(__file__))
 AI_PATH = os.path.normpath(os.path.join(_here, "..", "..", "..", "ai", "Moorcheh"))
 if AI_PATH not in sys.path:
     sys.path.insert(0, AI_PATH)
 
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from typing import Optional
 from memory_client import get_potholes, get_summary, save_pothole, mark_sent_to_311
 from report_generator import generate_chat_response
 from email_sender import send_pothole_report
@@ -18,6 +19,13 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
 
+class PotholeReport(BaseModel):
+    lat: float
+    lng: float
+    severity: str
+    road: str
+    frame_timestamp: str = ""
+
 @router.post("/chat")
 async def chat(request: ChatRequest):
     try:
@@ -26,7 +34,7 @@ async def chat(request: ChatRequest):
         return {"answer": answer, "potholes_found": len(all_potholes)}
     except Exception as e:
         return {
-            "answer": f"Chat service error: {str(e)}. Check HF_ENDPOINT in ai/Moorcheh/.env and Moorcheh connection.",
+            "answer": f"Chat service error: {str(e)}",
             "potholes_found": 0,
         }
 
@@ -42,39 +50,41 @@ async def get_potholes_by_road(road: str):
 async def summary():
     return get_summary()
 
-
-# ============================================================
-# NEW — pothole reporting with automatic email to 311
-# ============================================================
-
-class PotholeReport(BaseModel):
-    lat: float
-    lng: float
-    severity: str
-    road: str
-    frame_timestamp: str = ""
+# ✅ REMOVED: /api/reports GET and POST — handled by reports.py
 
 @router.post("/report")
-async def report_pothole(data: PotholeReport):
+async def report_pothole(
+    lat:             float                 = Form(None),
+    lng:             float                 = Form(None),
+    severity:        str                   = Form(None),
+    road:            str                   = Form("Unknown Road"),
+    frame_timestamp: str                   = Form(""),
+    image:           Optional[UploadFile]  = File(None),
+    data:            Optional[str]         = Form(None)
+):
     """
-    Called when a pothole is detected by the dashcam.
-    1. Saves to Moorcheh memory
-    2. Generates AI email
-    3. Sends to 311 Toronto automatically
+    Automated dashcam endpoint.
+    Saves to Moorcheh, generates AI email, sends to 311.
     """
-    # Step 1 — save to Moorcheh
+    image_bytes    = None
+    image_filename = "pothole_detection.jpg"
+
+    if image:
+        image_bytes    = await image.read()
+        image_filename = image.filename or "pothole_detection.jpg"
+
     pothole = save_pothole(
-        lat=data.lat,
-        lng=data.lng,
-        severity=data.severity,
-        road=data.road,
-        frame_timestamp=data.frame_timestamp
+        lat=lat or 43.6532,
+        lng=lng or -79.3832,
+        severity=severity or "medium",
+        road=road,
+        frame_timestamp=frame_timestamp,
+        image_bytes=image_bytes,
+        image_filename=image_filename
     )
 
-    # Step 2 & 3 — generate and send email
     email_result = send_pothole_report(pothole)
 
-    # Step 4 — mark as sent in Moorcheh memory
     if email_result["status"] == "sent":
         mark_sent_to_311(pothole["id"])
 
