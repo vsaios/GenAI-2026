@@ -1,18 +1,37 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 
 export function Signup() {
-  const { signUp } = useAuth()
+  const { user, loading, signUp } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!loading && user) navigate("/dashboard", { replace: true })
+  }, [loading, user, navigate])
+
+  if (loading) {
+    return (
+      <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16">
+        <p className="text-slate-400">Loading…</p>
+      </main>
+    )
+  }
+
+  if (user) return null
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
     setSubmitting(true)
     try {
       await signUp(email, password)
@@ -51,6 +70,20 @@ export function Signup() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+          />
+        </div>
+        <div>
+          <label htmlFor="signup-confirm-password" className="mb-1 block text-sm font-medium text-slate-200">
+            Confirm Password
+          </label>
+          <input
+            id="signup-confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
             className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"

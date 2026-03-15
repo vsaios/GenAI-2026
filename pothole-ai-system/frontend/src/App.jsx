@@ -9,6 +9,7 @@ import { TorontoPage } from "@/pages/TorontoPage"
 import { Report } from "@/pages/Report"
 import { Login } from "@/pages/Login"
 import { Signup } from "@/pages/Signup"
+import { ForgotPassword } from "@/pages/ForgotPassword"
 
 function AppContent() {
   const location = useLocation()
@@ -25,6 +26,7 @@ function AppContent() {
         <Route path="/home" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/dashboard"
           element={
