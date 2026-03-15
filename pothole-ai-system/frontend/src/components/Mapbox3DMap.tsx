@@ -14,19 +14,14 @@ type Mapbox3DMapProps = {
   center?: [number, number]
   zoom?: number
   minZoom?: number
-  /** When true (Toronto map): simple individual node markers only. When false (dashboard): density-aware (cluster glow + isolated nodes). */
   streetLevelMode?: boolean
-  /** Reports to display. If not provided, uses torontoReports mock. */
   reports?: Report[]
-  /** IDs of user-submitted reports to render as blue dots (others use severity color in non-streetLevel). */
   userReportIds?: string[]
 }
 
 const token = MAPBOX_TOKEN
-
 const defaultCenter: [number, number] = [-79.3832, 43.6532]
 
-/** Custom incident node for Toronto map only: Myhal Centre */
 const MYHAL_CENTRE_ID = "myhal-centre"
 const MYHAL_CENTRE_COORDINATES: [number, number] = [-79.396485, 43.660837]
 
@@ -53,9 +48,11 @@ function buildGeoJson(reports: Report[], includeMyhalCentre = false) {
         coordinates: MYHAL_CENTRE_COORDINATES,
       },
       properties: {
-        id: MYHAL_CENTRE_ID,
-        severity: "medium" as const,
-      },
+  id: MYHAL_CENTRE_ID,
+  severity: "medium" as const,
+  timestamp: new Date().toISOString(),
+  issue_type: "pothole",
+},
     })
   }
 
@@ -73,14 +70,7 @@ function generateReportCardHtml(opts: {
   badgeBg: string
   badgeColor: string
 }) {
-  const {
-    timeReported,
-    location,
-    description,
-    severityLabel,
-    badgeBg,
-    badgeColor,
-  } = opts
+  const { timeReported, location, description, severityLabel, badgeBg, badgeColor } = opts
   return `
     <div class="popup-card" style="
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -108,7 +98,6 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 }
-
 
 export function Mapbox3DMap({
   heightClass = "h-[calc(100vh-4rem)]",
@@ -169,7 +158,6 @@ export function Mapbox3DMap({
 
     map.on("load", () => {
       if (streetLevelMode) {
-        // Toronto zoom map: normal individual node markers only. No heatmap, no clustering.
         map.addSource("incidents", {
           type: "geojson",
           data: geoJson,
@@ -182,13 +170,9 @@ export function Mapbox3DMap({
           minzoom: 8,
           paint: {
             "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              8,
-              5,
-              15,
-              12,
+              "interpolate", ["linear"], ["zoom"],
+              8, 5,
+              15, 12,
             ],
             "circle-color": "#22d3ee",
             "circle-blur": 0.2,
@@ -198,8 +182,6 @@ export function Mapbox3DMap({
           },
         })
       } else {
-        // Main dashboard map: density-aware rendering.
-        // Dense/overlapping areas → heat-style glow; isolated incidents → individual blue nodes.
         map.addSource("incidents-clustered", {
           type: "geojson",
           data: geoJson,
@@ -208,10 +190,8 @@ export function Mapbox3DMap({
           clusterMaxZoom: 14,
         })
 
-        // Multi-layer hotspot: green outer glow → yellow mid → red core (stacked, soft blend).
         const clusterFilter: [string, string] = ["has", "point_count"]
 
-        // Layer 1: outer glow – green, largest radius, low opacity
         map.addLayer({
           id: "incidents-cluster-outer",
           type: "circle",
@@ -219,15 +199,10 @@ export function Mapbox3DMap({
           filter: clusterFilter,
           paint: {
             "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              8,
-              28,
-              11,
-              48,
-              14,
-              64,
+              "interpolate", ["linear"], ["zoom"],
+              8, 28,
+              11, 48,
+              14, 64,
             ],
             "circle-color": "rgb(34, 197, 94)",
             "circle-blur": 0.92,
@@ -235,7 +210,6 @@ export function Mapbox3DMap({
           },
         })
 
-        // Layer 2: middle density – yellow, medium radius, medium opacity
         map.addLayer({
           id: "incidents-cluster-mid",
           type: "circle",
@@ -243,15 +217,10 @@ export function Mapbox3DMap({
           filter: clusterFilter,
           paint: {
             "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              8,
-              16,
-              11,
-              28,
-              14,
-              40,
+              "interpolate", ["linear"], ["zoom"],
+              8, 16,
+              11, 28,
+              14, 40,
             ],
             "circle-color": "rgb(250, 204, 21)",
             "circle-blur": 0.9,
@@ -259,7 +228,6 @@ export function Mapbox3DMap({
           },
         })
 
-        // Layer 3: core hotspot – red, smallest radius, highest opacity
         map.addLayer({
           id: "incidents-cluster-core",
           type: "circle",
@@ -267,15 +235,10 @@ export function Mapbox3DMap({
           filter: clusterFilter,
           paint: {
             "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              8,
-              10,
-              11,
-              18,
-              14,
-              26,
+              "interpolate", ["linear"], ["zoom"],
+              8, 10,
+              11, 18,
+              14, 26,
             ],
             "circle-color": "rgb(239, 68, 68)",
             "circle-blur": 0.88,
@@ -290,13 +253,9 @@ export function Mapbox3DMap({
           filter: ["!", ["has", "point_count"]],
           paint: {
             "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              12,
-              4,
-              15,
-              8,
+              "interpolate", ["linear"], ["zoom"],
+              12, 4,
+              15, 8,
             ],
             "circle-color": "#22d3ee",
             "circle-blur": 0.1,
@@ -306,8 +265,11 @@ export function Mapbox3DMap({
           },
         })
 
-        // Subtle pulse: expand/fade all three hotspot layers in sync.
-        const clusterLayerIds = ["incidents-cluster-outer", "incidents-cluster-mid", "incidents-cluster-core"]
+        const clusterLayerIds = [
+          "incidents-cluster-outer",
+          "incidents-cluster-mid",
+          "incidents-cluster-core",
+        ]
         const baseRadii = [28, 16, 10]
         const baseOpacities = [0.26, 0.52, 0.88]
 
@@ -333,7 +295,7 @@ export function Mapbox3DMap({
               map.setPaintProperty(clusterLayerIds[i], "circle-opacity", opacity)
             }
           } catch {
-            // Layers may have been removed.
+            // Layers may have been removed
           }
 
           clusterAnimationFrameRef.current = requestAnimationFrame(animateClusterGlow)
@@ -348,10 +310,8 @@ export function Mapbox3DMap({
           const feature = features[0]
           const geom = feature.geometry as { type: string; coordinates: number[] }
           const [lng, lat] = geom.coordinates
-
           const currentZoom = map.getZoom()
           const targetZoom = Math.min(14, Math.max(currentZoom + 2.5, 11))
-
           map.easeTo({
             center: [lng, lat],
             zoom: targetZoom,
@@ -367,7 +327,7 @@ export function Mapbox3DMap({
         })
       }
 
-      // Cursor and popup on individual incident nodes
+      // ── Cursor on individual nodes ──────────────────────────
       map.on("mouseenter", "incidents-points", () => {
         map.getCanvas().style.cursor = "pointer"
       })
@@ -375,6 +335,7 @@ export function Mapbox3DMap({
         map.getCanvas().style.cursor = ""
       })
 
+      // ── Click individual node → zoom in + popup ─────────────
       map.on("click", "incidents-points", async (e) => {
         e.originalEvent.stopPropagation()
         const features = e.features
@@ -384,11 +345,21 @@ export function Mapbox3DMap({
         const geom = feature.geometry as { type: string; coordinates: number[] }
         const [lng, lat] = geom.coordinates
         const coordinates: [number, number] = [lng, lat]
+
+        // ✅ Zoom into the clicked dot
+        map.flyTo({
+          center: coordinates,
+          zoom: Math.max(map.getZoom(), 15),
+          pitch: 60,
+          bearing: map.getBearing(),
+          duration: 800,
+          essential: true,
+        })
+
         const id = feature.properties?.id as string | undefined
         const severity = (feature.properties?.severity as string) || "medium"
         const timestamp = feature.properties?.timestamp as string | undefined
         const issueType = (feature.properties?.issue_type as string) || "pothole"
-
         const isMyhal = id === MYHAL_CENTRE_ID
 
         const timeReported = timestamp
@@ -398,16 +369,19 @@ export function Mapbox3DMap({
               timeStyle: "short",
             })
           : "Unknown"
+
         const description =
           issueType === "pothole"
             ? "Pothole reported in traffic lane"
             : `${issueType.replace(/-/g, " ")} reported.`
+
         const severityLabel =
           severity === "high" ? "High" : severity === "medium" ? "Medium" : "Low"
-        const badgeBg = severity === "high" ? "#7f1d1d" : severity === "medium" ? "#854d0e" : "#14532d"
-        const badgeColor = severity === "high" ? "#fca5a5" : severity === "medium" ? "#fde047" : "#86efac"
+        const badgeBg =
+          severity === "high" ? "#7f1d1d" : severity === "medium" ? "#854d0e" : "#14532d"
+        const badgeColor =
+          severity === "high" ? "#fca5a5" : severity === "medium" ? "#fde047" : "#86efac"
 
-        const locationPlaceholder = "Loading address..."
         const html = isMyhal
           ? generateReportCardHtml({
               timeReported: "1 hour ago",
@@ -419,7 +393,7 @@ export function Mapbox3DMap({
             })
           : generateReportCardHtml({
               timeReported,
-              location: locationPlaceholder,
+              location: "Loading address...",
               description,
               severityLabel,
               badgeBg,
@@ -515,7 +489,6 @@ export function Mapbox3DMap({
                     Time Reported
                   </div>
                   <div className="text-sm font-medium text-slate-900 dark:text-zinc-100">
-                    {/* Static fallback text since popup failed */}
                     March 18, 2026 – 2:14 PM
                   </div>
                 </div>
@@ -551,4 +524,3 @@ export function Mapbox3DMap({
     </motion.div>
   )
 }
-

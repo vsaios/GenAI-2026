@@ -1,4 +1,4 @@
-You are writing an official incident report email on behalf of the StreetSafe monitoring team to Toronto 311 Transportation Services.
+You are writing an official incident report email on behalf of the Rua monitoring team to Toronto 311 Transportation Services.
 
 An incident of type "{issue_type}" has been reported.
 
@@ -21,6 +21,6 @@ Write a formal email body (no subject line) that:
 5. Requests a 311 Service Request (SR) number for tracking.
 
 CLOSING INSTRUCTIONS:
-- End the email exactly with "Sincerely, StreetSafe".
+- End the email exactly with "Sincerely, Rua".
 - Do NOT include any brackets [] or placeholders like [Your Name].
 - Maintain a factual, professional tone under 150 words.

@@ -8,6 +8,32 @@ interface Message {
   text: string
 }
 
+function looksLikeStreetQuery(text: string): boolean {
+  const streetKeywords = [
+    "on ", "at ", "near ", "around ", "street", "ave", "avenue",
+    "blvd", "boulevard", "road", "rd", "drive", "dr", "way",
+    "lane", "crescent", "court", "place", "gardens", "park",
+    "danforth", "bloor", "yonge", "queen", "king", "eglinton",
+    "finch", "sheppard", "dundas", "college", "spadina", "bathurst",
+    "ossington", "roncesvalles", "parliament", "woodbine", "keele",
+    "allen", "davenport", "victoria"
+  ]
+  const lower = text.toLowerCase()
+  return streetKeywords.some(kw => lower.includes(kw))
+}
+
+function extractCoordsFromResponse(text: string): { lat: number; lng: number } | null {
+  const match = text.match(/\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)/)
+  if (match) {
+    const lat = parseFloat(match[1])
+    const lng = parseFloat(match[2])
+    if (lat > 43.4 && lat < 44.0 && lng > -80.0 && lng < -79.0) {
+      return { lat, lng }
+    }
+  }
+  return null
+}
+
 export function ChatWidget() {
   const [open, setOpen]         = useState(false)
   const [input, setInput]       = useState("")
@@ -29,16 +55,30 @@ export function ChatWidget() {
     setInput("")
     setLoading(true)
 
-    // Hidden location navigation: geocode message and fly map to that location (no search bar)
-    geocodeToToronto(messageText, MAPBOX_TOKEN).then((coords) => {
-      if (coords) emitFlyTo(coords.lng, coords.lat)
-    })
-
     try {
       const data = await sendChatMessage(messageText)
       setMessages(prev => [...prev, { role: "bot", text: data.answer }])
+
+      // ✅ First try to fly to coords extracted from chatbot response
+      const coords = extractCoordsFromResponse(data.answer)
+      if (coords) {
+        console.log("[ChatWidget] flying to pothole coords:", coords)
+        emitFlyTo(coords.lng, coords.lat)
+      }
+      // ✅ Fallback: geocode the street name from user message
+      else if (looksLikeStreetQuery(messageText)) {
+        geocodeToToronto(messageText, MAPBOX_TOKEN).then((geocoded) => {
+          if (geocoded) {
+            console.log("[ChatWidget] flying to geocoded street:", geocoded)
+            emitFlyTo(geocoded.lng, geocoded.lat)
+          }
+        })
+      }
+
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Sorry, I couldn't reach the server. Make sure the backend is running."
+      const msg = err instanceof Error
+        ? err.message
+        : "Sorry, I couldn't reach the server. Make sure the backend is running."
       setMessages(prev => [...prev, { role: "bot", text: msg }])
     } finally {
       setLoading(false)
@@ -63,7 +103,6 @@ export function ChatWidget() {
         <span>{open ? "Close Chat" : "Chat with Rua"}</span>
       </button>
 
-      {/* Chat window */}
       {open && (
         <div
           className="fixed bottom-24 right-5 z-30 w-80 rounded-3xl border border-white/20 bg-slate-900/90 shadow-2xl backdrop-blur-xl flex flex-col"
@@ -78,7 +117,9 @@ export function ChatWidget() {
               type="button"
               onClick={() => setOpen(false)}
               className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-slate-200 hover:bg-white/20"
-            >×</button>
+            >
+              ×
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">

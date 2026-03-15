@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# Fixed import — use relative path instead of app.
 from database.db import engine, Base
 from routes.reports import router as reports_router
 
@@ -25,11 +24,20 @@ except Exception as e:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Create database tables
     Base.metadata.create_all(bind=engine)
+
+    # Auto-sync SQLite → Moorcheh on every startup
+    try:
+        from sync_moorcheh import run_sync
+        run_sync()
+    except Exception as e:
+        print(f"[Sync] Could not auto-sync on startup: {e}")
+
     yield
 
 
-app = FastAPI(title="Rua API", lifespan=lifespan)
+app = FastAPI(title="StreetSafe API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
