@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.database.db import get_db
-from app.database.models import ReportModel
+from database.db import get_db
+from database.models import ReportModel
 
 # Wire up AI path so we can import email_sender
 _here = os.path.dirname(os.path.abspath(__file__))

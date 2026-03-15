@@ -22,9 +22,21 @@ except ConflictError:
 # PUBLIC FUNCTIONS — backend calls these
 # ============================================================
 
-def save_pothole(lat: float, lng: float, severity: str, road: str, frame_timestamp: str = "") -> dict:
-    """Save a detected Toronto pothole to Moorcheh memory."""
+def save_pothole(lat: float, lng: float, severity: str, road: str,
+                 frame_timestamp: str = "",
+                 image_bytes: bytes = None,
+                 image_filename: str = "pothole.jpg") -> dict:
+    """Save pothole + image to Moorcheh."""
+
     pothole_id = _generate_id()
+
+    # Store image in Moorcheh pothole_images namespace
+    image_base64 = None
+    if image_bytes:
+        from image_handler import store_image_in_moorcheh
+        image_result  = store_image_in_moorcheh(pothole_id, image_bytes, image_filename)
+        image_base64  = image_result.get("image_base64")
+
     record = {
         "id":              pothole_id,
         "lat":             lat,
@@ -35,10 +47,14 @@ def save_pothole(lat: float, lng: float, severity: str, road: str, frame_timesta
         "timestamp":       datetime.utcnow().isoformat(),
         "frame_timestamp": frame_timestamp,
         "status":          "reported",
-        "sent_to_311":     False
+        "sent_to_311":     False,
+        "image_base64":    image_base64,
+        "image_filename":  image_filename,
+        "has_image":       image_base64 is not None
     }
+
     _moorcheh_write(pothole_id, record)
-    print(f"[Memory] Saved pothole #{pothole_id} on {road}")
+    print(f"[Memory] Saved pothole #{pothole_id} on {road} | image: {'yes' if image_base64 else 'no'}")
     return record
 
 def get_potholes(road: str = None) -> list:

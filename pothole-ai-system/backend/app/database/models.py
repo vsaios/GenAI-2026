@@ -2,7 +2,7 @@
 from sqlalchemy import Column, String, Float, DateTime
 from sqlalchemy.sql import func
 
-from app.database.db import Base
+from database.db import Base
 
 
 class ReportModel(Base):

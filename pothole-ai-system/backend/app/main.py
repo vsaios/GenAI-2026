@@ -10,13 +10,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.database.db import engine, Base
-from app.routes.reports import router as reports_router
+# Fixed import — use relative path instead of app.
+from database.db import engine, Base
+from routes.reports import router as reports_router
 
 try:
     from routes.chat import router as chat_router
     CHAT_AVAILABLE = True
-except Exception:
+except Exception as e:
+    print(f"[Chat] Chat router unavailable: {e}")
     chat_router = None
     CHAT_AVAILABLE = False
 

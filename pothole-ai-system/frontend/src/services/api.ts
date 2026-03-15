@@ -1,4 +1,4 @@
-const BASE_URL = ""
+const BASE_URL = "http://localhost:8000"
 
 export async function sendChatMessage(message: string): Promise<{ answer: string; potholes_found: number }> {
     const response = await fetch(`${BASE_URL}/chat`, {

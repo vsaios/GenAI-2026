@@ -17,6 +17,7 @@ export default defineConfig({
       "/potholes": { target: "http://localhost:8000", changeOrigin: true },
       "/summary": { target: "http://localhost:8000", changeOrigin: true },
       "/uploads": { target: "http://localhost:8000", changeOrigin: true },
+      '/api/reports': { target: "http://localhost:8000", changeOrigin: true },
     },
   },
 })
